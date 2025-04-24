@@ -1,21 +1,48 @@
 
-version: '3'
+# version: '3'
+# services:
+#   selenium:
+#     image: selenium/standalone-chrome:129.0
+#     container_name: selenium
+#     ports:
+#       - 4444:4444  # Selenium サーバー
+#       - 7900:7900  # VNC（Seleniumの挙動を確認するためのGUI）
+#     shm_size: '2gb'
+
+
+#   python:
+#     build: ./docker
+#     container_name: python-app
+#     depends_on:
+#       - selenium
+#     volumes:
+#       - ./src:/app/src
+#     environment:
+#       - SELENIUM_URL=http://selenium:4444/wd/hub
+
+version: '3.8'
+
 services:
   selenium:
     image: selenium/standalone-chrome:129.0
     container_name: selenium
     ports:
-      - 4444:4444  # Selenium サーバー
-      - 7900:7900  # VNC（Seleniumの挙動を確認するためのGUI）
+      - 4444:4444
+      - 7900:7900
     shm_size: '2gb'
+    healthcheck:
+      test: curl -f http://localhost:4444/wd/hub/status || exit 1
+      interval: 5s
+      timeout: 2s
+      retries: 10
 
   python:
     build: ./docker
-    container_name: python-app
-    depends_on:
-      - selenium
+    container_name: python
     volumes:
       - ./src:/app/src
     environment:
       - SELENIUM_URL=http://selenium:4444/wd/hub
-
+    depends_on:
+      selenium:
+        condition: service_healthy
